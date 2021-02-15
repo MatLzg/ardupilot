@@ -1,0 +1,278 @@
+# hw definition file for processing by chibios_hwdef.py
+# for FMUv3 hardware (ie. for CUAV-PixHack-v5 and Pixhawk4)
+
+# MCU class and specific type
+MCU STM32F4xx STM32F427xx
+
+# crystal frequency
+OSCILLATOR_HZ 16000000
+
+# board ID for firmware load     参考 本工程board_types.txt 暂不改
+# https://github.com/ArduPilot/ardupilot/blob/master/Tools/AP_Bootloader/board_types.txt
+# APJ_BOARD_ID 9
+APJ_BOARD_ID 92
+
+# STM32_LSEDRV  以下配置获得HCLK=168M
+#define STM32_LSECLK 32768U
+# LSE时钟分频
+# define STM32_LSEDRV (3U << 3U)	
+# define STM32_PLLSRC STM32_PLLSRC_HSE
+# define STM32_PLLM_VALUE 8
+# define STM32_PLLN_VALUE 168
+# define STM32_PLLP_VALUE 2
+# define STM32_PLLQ_VALUE 7
+
+
+# ChibiOS system timer
+STM32_ST_USE_TIMER 5
+
+# flash size
+FLASH_SIZE_KB 2048
+
+# USB setup
+USB_STRING_MANUFACTURER "ArduPilot"
+USB_STRING_PRODUCT "%BOARD%"
+
+# order of I2C buses
+I2C_ORDER I2C1
+
+
+# The normal usage of this ordering is:
+# 1) SERIAL0: console (primary mavlink, usually USB)	USART1
+# 2) SERIAL1: GPS	USART3
+# 3) SERIAL2: telem1	UART7
+# 4) SERIAL3: telem2	UART8
+
+# order of UARTs (and USB)
+SERIAL_ORDER OTG1 USART2 USART3 UART8 UART7
+
+# UART for IOMCU 没有IOMCU
+#IOMCU_UART USART6
+
+
+# UART3 serial GPS
+#PD9 USART3_RX USART3
+#PD8 USART3_TX USART3
+
+# analog in
+#电池电压检测 比例因子1.0 AD12_CH10
+PC0 BATT_VOLTAGE_SENS ADC1 SCALE(1)
+#板载电压检测
+PC4 VDD_5V_SENS ADC1 SCALE(2)
+#板载的3V3可以通过基准通道反推系统3V3
+PC5 VDD_3V3_SENS ADC1 SCALE(2)
+
+
+
+# SPI1 - internal sensors
+PA5 SPI1_SCK SPI1
+PB4 SPI1_MISO SPI1
+PB5 SPI1_MOSI SPI1
+
+# 外设电源使能 高电平有效
+PE4 VDD_3V3_PERIPH_EN OUTPUT LOW
+
+# Now we define the pins that USB is connected on.
+PA9 VBUS INPUT OPENDRAIN
+PA11 OTG_FS_DM OTG1
+PA12 OTG_FS_DP OTG1
+
+# These are the pins for SWD debugging with a STlinkv2 or black-magic probe.
+PA13 JTMS-SWDIO SWD
+PA14 JTCK-SWCLK SWD
+
+#通用IO输出 
+#PB0 EXTERN_GPIO1 OUTPUT GPIO(1)
+#PB1 EXTERN_GPIO2 OUTPUT GPIO(2)
+
+# This defines some input pins, currently unused.
+# PB2 BOOT1 INPUT
+
+# CAN bus
+PD0  CAN1_RX CAN1
+PD1  CAN1_TX CAN1
+
+# I2C buses
+PB6 I2C1_SCL I2C1
+PB7 I2C1_SDA I2C1
+
+# SPI2 
+PD3 SPI2_SCK SPI2
+PC2 SPI2_MISO SPI2
+PC3 SPI2_MOSI SPI2
+
+# This defines more ADC inputs.
+# ADC_spray_scope_check
+PB0 AUX_POWER ADC1 SCALE(1)
+# ADC_spray_scope_check
+PB1 AUX_ADC2 ADC1 SCALE(1)
+
+# Now setup the pins for the microSD card, if available.
+PC8  SDIO_D0 SDIO
+PC9  SDIO_D1 SDIO
+PC10 SDIO_D2 SDIO
+PC11 SDIO_D3 SDIO
+PC12 SDIO_CK SDIO
+PD2  SDIO_CMD SDIO
+# microSD support
+# PC8  SDMMC_D0 SDMMC1
+# PC9  SDMMC_D1 SDMMC1
+# PC10 SDMMC_D2 SDMMC1
+# PC11 SDMMC_D3 SDMMC1
+# PC12 SDMMC_CK SDMMC1
+# PD2  SDMMC_CMD SDMMC1
+
+
+# Add CS pins to ensure they are high in bootloader
+PC13 FRAM_CS CS SPEED_VERYLOW
+# SPI1_CS3_BMI088_GYRO 和 MPU6050_CS 共用 需要选其一  使用IMU小板时用作SPI1_CS3_BMI088_GYRO 后面类似
+# MPU6050_CS/SPI1_CS3_BMI088_GYRO
+PC1 MPU6050_CS CS
+# MPU0650_INT/SPI1_DRDY6_BMI088_ACC
+PA0 MPU0650_INT CS
+#使用IMU小板时需要打开以下屏蔽 对应的电机PWM输出和PWM检测会屏蔽
+#PA1 SPI1_CS1_ICM20689 CS
+#PA2 SPI1_DRDY3_BMI088_ACC CS
+#PA3 SPI1_CS4_BMI088_ACC CS
+#PA4  SPI1_DRDY1_ICM20689 CS
+#PA6 SPI1_DRDY5_BMI088_GYRO CS
+#PA7 SPI1_DRDY2_BMI088_GYRO CS
+#PB2 SPI1_DRDY2_BMI088_GYRO CS
+#PE10 SPI1_DRDY4_ICM20649 CS
+
+
+# enable RTSCTS support
+# define AP_FEATURE_RTSCTS 1
+define AP_FEATURE_RTSCTS 0
+
+# Another USART, this one for telem1
+# CTS RTS 硬件应答信号均没有使用
+PD6 USART2_RX USART2
+PD5 USART2_TX USART2
+#PD3 USART2_CTS USART2
+#PD4 USART2_RTS USART2
+
+PD9 USART3_RX USART3
+PD8 USART3_TX USART3
+
+# PF7 UART7_RX UART7 NODMA
+# PE8 UART7_TX UART7 NODMA
+PE7 UART7_RX UART7
+PE8 UART7_TX UART7
+
+PE0 UART8_RX UART8
+PE1 UART8_TX UART8
+
+# PWMout
+# PWM AUX channels
+PE9  TIM1_CH1 TIM1 PWM(1) GPIO(40)
+PE11 TIM1_CH2 TIM1 PWM(2) GPIO(42)
+PE13 TIM1_CH3 TIM1 PWM(3) GPIO(44)
+PE14 TIM1_CH4 TIM1 PWM(4) GPIO(45)
+#PA2  TIM5_CH3 TIM5 PWM(5) GPIO(25)
+#PA3  TIM5_CH4 TIM5 PWM(6) GPIO(26)
+PD13 TIM4_CH2 TIM4 PWM(7) GPIO(60)
+PD12 TIM4_CH1 TIM4 PWM(8) GPIO(59)
+PD14 TIM4_CH3 TIM4 PWM(9) GPIO(61)
+PD15 TIM4_CH4 TIM4 PWM(10) GPIO(62)
+PC6 TIM3_CH1 TIM3  PWM(11) GPIO(63)
+PC7 TIM3_CH2 TIM3  PWM(12) GPIO(64)
+
+# 当前的喷洒底板 V1.0 只有2路
+define BOARD_PWM_COUNT_DEFAULT 2
+
+# capture pins
+PB8  PWM_IN_1  INPUT GPIO(95)
+PB9  PWM_IN_2  INPUT GPIO(96)
+PB10 PWM_IN_3  INPUT GPIO(47)
+PB11 PWM_IN_4  INPUT GPIO(48)
+#PA0  PWM_IN_5  INPUT GPIO(23)
+#PA1  PWM_IN_6  INPUT GPIO(24)
+PE5  PWM_IN_7  INPUT GPIO(4)
+PE6  PWM_IN_8  INPUT GPIO(5)
+PB15 PWM_IN_9  INPUT GPIO(54)
+PB14 PWM_IN_10  INPUT GPIO(53)
+PA6  PWM_IN_11  INPUT GPIO(31)
+PA7  PWM_IN_12  INPUT GPIO(32)
+
+# Define a LED, mapping it to GPIO(0). LOW will illuminate the LED
+PE3 FMU_LED_AMBER OUTPUT HIGH OPENDRAIN GPIO(2)
+
+
+# SPI 速度 模式 设置
+#
+#
+# SPI devices
+SPIDEV icmpu6050      SPI1 DEVID1  MPU6050_CS   MODE3  8*MHZ  8*MHZ 
+SPIDEV ramtron        SPI2 DEVID1  FRAM_CS      MODE3  8*MHZ  8*MHZ 
+
+
+# This adds a C define which sets up the ArduPilot architecture
+# define. Any line starting with 'define' is copied literally as
+# a #define in the hwdef.h header.
+define HAL_CHIBIOS_ARCH_FMUV3 1
+
+# Nnow some defines for logging and terrain data files.
+define HAL_BOARD_LOG_DIRECTORY "/APM/LOGS"
+define HAL_BOARD_TERRAIN_DIRECTORY "/APM/TERRAIN"
+
+# We need to tell HAL_ChibiOS/Storage.cpp how much storage is
+# available (in bytes).
+define HAL_STORAGE_SIZE 16384
+
+# allow to have have a dedicated safety switch pin
+# define HAL_HAVE_SAFETY_SWITCH 1
+
+# Enable RAMTROM parameter storage.
+define HAL_WITH_RAMTRON 1
+
+# Enable FAT filesystem support (needs a microSD defined via SDIO).
+define HAL_OS_FATFS_IO 1
+
+
+# Now setup the default battery pins driver analog pins and default
+# scaling for the power brick.
+# define HAL_BATT_VOLT_SCALE 13
+
+# This defines the default maximum clock on I2C devices.
+define HAL_I2C_MAX_CLOCK 100000
+
+
+# List of files to put in ROMFS. For fmuv3 we need an IO firmware so
+# we can automatically update the IOMCU firmware on boot. The format
+# is "ROMFS ROMFS-filename source-filename". Paths are relative to the
+# ardupilot root.
+ROMFS io_firmware.bin Tools/IO_Firmware/iofirmware_lowpolh.bin
+
+
+#########################################
+
+# board voltage
+STM32_VDD 330U
+
+#使用实例
+# we need to disable DMA on the last 2 FMU channels
+# as timer 12 doesn't have a TIMn_UP DMA option
+# PH6  TIM12_CH1 TIM12 PWM(7) GPIO(56) NODMA
+# PH9  TIM12_CH2 TIM12 PWM(8) GPIO(57) NODMA
+
+#DMA_PRIORITY SDMMC* UART8* ADC* SPI* TIM*
+
+#define CH_DBG_ENABLE_ASSERTS TRUE
+#define CH_DBG_ENABLE_CHECKS TRUE
+#define CH_DBG_SYSTEM_STATE_CHECK TRUE
+#define CH_DBG_ENABLE_STACK_CHECK TRUE
+
+# define HAL_SPI_CHECK_CLOCK_FREQ 1
+
+
+# use ChibiOS based IO firmware to avoid issue with SBUS
+# input on Pixhawk4. NuttX has no parity checking on UARTs
+ROMFS io_firmware.bin Tools/IO_Firmware/iofirmware_lowpolh.bin
+
+########################################
+# 编译提示 PA4 PE10 Unknown pin function  
+	#屏蔽后不报错 这两个引脚是板载的没有引出 当使用IMU小板时才有用 
+
+
+

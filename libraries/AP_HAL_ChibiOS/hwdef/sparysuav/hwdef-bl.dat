@@ -1,0 +1,102 @@
+# hw definition file for processing by chibios_hwdef.py
+# for F427 bootloader
+
+# MCU class and specific type
+MCU STM32F4xx STM32F427xx
+
+# board ID for firmware load     参考 本工程board_types.txt 暂不改
+# https://github.com/ArduPilot/ardupilot/blob/master/Tools/AP_Bootloader/board_types.txt
+# APJ_BOARD_ID 9
+APJ_BOARD_ID 92
+
+# crystal frequency
+OSCILLATOR_HZ 16000000
+
+# ChibiOS system timer
+STM32_ST_USE_TIMER 5
+
+# flash size
+FLASH_SIZE_KB 2048
+
+# location of application code
+FLASH_BOOTLOADER_LOAD_KB 16
+
+# bootloader loads at start of flash
+FLASH_RESERVE_START_KB 0
+
+# USB setup ？？
+USB_STRING_MANUFACTURER "ArduPilot"
+USB_STRING_SERIAL  "%SERIAL%"
+
+# baudrate to run bootloader at on uarts
+define BOOTLOADER_BAUDRATE 115200
+
+# uarts and USB to run bootloader protocol on
+SERIAL_ORDER OTG1 USART2 USART3 UART7 UART8
+
+# this is the pin that senses USB being connected. It is an input pin
+# setup as OPENDRAIN
+PA9 VBUS INPUT OPENDRAIN
+
+# now we define the pins that USB is connected on
+PA11 OTG_FS_DM OTG1
+PA12 OTG_FS_DP OTG1
+
+# these are the pins for SWD debugging with a STlinkv2 or black-magic probe
+PA13 JTMS-SWDIO SWD
+PA14 JTCK-SWCLK SWD
+
+
+# Another USART, this one for telem1
+# CTS RTS 硬件应答信号均没有使用
+PD6 USART2_RX USART2
+PD5 USART2_TX USART2
+#PD3 USART2_CTS USART2
+#PD4 USART2_RTS USART2
+
+PD9 USART3_RX USART3
+PD8 USART3_TX USART3
+
+# PF7 UART7_RX UART7 NODMA
+# PE8 UART7_TX UART7 NODMA
+PE7 UART7_RX UART7
+PE8 UART7_TX UART7
+
+PE0 UART8_RX UART8
+PE1 UART8_TX UART8
+
+# define a LED 低电平亮灯
+PE3 LED_BOOTLOADER OUTPUT
+define HAL_LED_ON 0
+
+# this adds a C define which sets up the ArduPilot architecture
+# define. Any line starting with 'define' is copied literally as
+# a #define in the hwdef.h header
+# hwdat.h在builb/fmuv3/**.h
+define HAL_CHIBIOS_ARCH_FMUV3 1
+
+# we need to tell HAL_ChibiOS/Storage.cpp how much storage is
+# available (in bytes)
+define HAL_STORAGE_SIZE 16384
+
+# fmuv3 没有打开也就先不用
+# define HAL_USE_EMPTY_STORAGE 1
+
+# Add CS pins to ensure they are high in bootloader
+PC13 FRAM_CS CS SPEED_VERYLOW
+# SPI1_CS3_BMI088_GYRO 和 MPU6050_CS 共用 需要选其一  使用IMU小板时用作SPI1_CS3_BMI088_GYRO 后面类似
+# MPU6050_CS/SPI1_CS3_BMI088_GYRO
+PC1 MPU6050_CS CS
+# MPU0650_INT/SPI1_DRDY6_BMI088_ACC
+PA0 MPU0650_INT CS
+#使用IMU小板时需要打开以下屏蔽 对应的电机PWM输出和PWM检测会屏蔽
+#PA1 SPI1_CS1_ICM20689 CS
+#PA2 SPI1_DRDY3_BMI088_ACC CS
+#PA3 SPI1_CS4_BMI088_ACC CS
+#PA4  SPI1_DRDY1_ICM20689 CS
+#PA6 SPI1_DRDY5_BMI088_GYRO CS
+#PA7 SPI1_DRDY2_BMI088_GYRO CS
+#PB2 SPI1_DRDY2_BMI088_GYRO CS
+#PE10 SPI1_DRDY4_ICM20649 CS
+
+
