@@ -1,141 +1,257 @@
-# ArduPilot Project
+# 编译提示 PA4 PE10 Unknown pin function  
+	#屏蔽后不报错 这两个引脚是板载的没有引出 当使用IMU小板时才有用 
 
-<a href="https://ardupilot.org/discord"><img src="https://img.shields.io/discord/674039678562861068.svg" alt="Discord">
+0204
+移动文件后报错
+Missing configuration file '/home/mat/Desktop/20-01-27/build/bebop/ap_config.h', reconfigure the project!
+解决
+./waf distclean 
+./waf configure --board sparysuav
+删除之前的编译文件重新配置编译
 
-![Test Copter](https://github.com/ArduPilot/ardupilot/workflows/test%20copter/badge.svg?branch=master) ![Test Plane](https://github.com/ArduPilot/ardupilot/workflows/test%20plane/badge.svg?branch=master) ![Test Rover](https://github.com/ArduPilot/ardupilot/workflows/test%20rover/badge.svg?branch=master) ![Test Sub](https://github.com/ArduPilot/ardupilot/workflows/test%20sub/badge.svg?branch=master) ![Test Tracker](https://github.com/ArduPilot/ardupilot/workflows/test%20tracker/badge.svg?branch=master)
 
-![Test AP_Periph](https://github.com/ArduPilot/ardupilot/workflows/test%20ap_periph/badge.svg?branch=master) ![Test Chibios](https://github.com/ArduPilot/ardupilot/workflows/test%20chibios/badge.svg?branch=master) ![Test Linux SBC](https://github.com/ArduPilot/ardupilot/workflows/test%20Linux%20SBC/badge.svg?branch=master) ![Test Replay](https://github.com/ArduPilot/ardupilot/workflows/test%20replay/badge.svg?branch=master)
+时钟部分报错 提示与其他部分冲突
+In file included from ../../libraries/AP_HAL_ChibiOS/hwdef/common/mcuconf.h:45:0,
+                 from ../../modules/ChibiOS/os/hal/ports/STM32/LLD/TIMv1/hal_st_lld.h:30,
+                 from ../../modules/ChibiOS/os/hal/include/hal_st.h:46,
+                 from ../../modules/ChibiOS/os/common/ports/ARMCMx/chcore_timer.h:32,
+                 from ../../modules/ChibiOS/os/common/ports/ARMCMx/chcore.h:205,
+                 from ../../modules/ChibiOS/os/rt/include/ch.h:110,
+                 from ../../modules/ChibiOS/os/hal/osal/rt/osal.h:32,
+                 from ../../modules/ChibiOS/os/hal/include/hal.h:28,
+                 from ../../modules/ChibiOS/os/hal/ports/STM32/LLD/USARTv1/hal_uart_lld.c:25:
+../../libraries/AP_HAL_ChibiOS/hwdef/common/stm32f47_mcuconf.h:128:0: warning: "STM32_PLLQ_VALUE" redefined
+ #define STM32_PLLQ_VALUE                    8
+ 
+In file included from ../../libraries/AP_HAL_ChibiOS/hwdef/common/chconf.h:31:0,
+                 from ../../modules/ChibiOS/os/rt/include/ch.h:90,
+                 from ../../modules/ChibiOS/os/hal/osal/rt/osal.h:32,
+                 from ../../modules/ChibiOS/os/hal/include/hal.h:28,
+                 from ../../modules/ChibiOS/os/hal/ports/STM32/LLD/USARTv1/hal_uart_lld.c:25:
+./hwdef.h:38:0: note: this is the location of the previous definition
+ #define STM32_PLLQ_VALUE 7
+暂时先屏蔽 
+# STM32_LSEDRV  以下配置获得HCLK=168M
+#define STM32_LSECLK 32768U
+# LSE时钟分频
+# define STM32_LSEDRV (3U << 3U)	
+# define STM32_PLLSRC STM32_PLLSRC_HSE
+# define STM32_PLLM_VALUE 8
+# define STM32_PLLN_VALUE 168
+# define STM32_PLLP_VALUE 2
+# define STM32_PLLQ_VALUE 7
+现在比较疑惑 4.1的结构在 与3.6.8不同
+	老版本modules文件夹下PX4NuttX/nuttx部分包含着MCU的BootLoad代码
+		PX4Firmware
+	4.1的模式变了
 
-![Test Unit Tests](https://github.com/ArduPilot/ardupilot/workflows/test%20unit%20tests/badge.svg?branch=master)
 
-[![Build SemaphoreCI](https://semaphoreci.com/api/v1/ardupilot/ardupilot/branches/master/badge.svg)](https://semaphoreci.com/ardupilot/ardupilot) [![Build Status](https://dev.azure.com/ardupilot-org/ardupilot/_apis/build/status/ArduPilot.ardupilot?branchName=master)](https://dev.azure.com/ardupilot-org/ardupilot/_build/latest?definitionId=1&branchName=master)
+# ChibiOS system timer 系统定时器选用只能是TIM5/2 32bit and 自动重载
+STM32_ST_USE_TIMER 5
+#PA2  TIM5_CH3 TIM5 PWM(5) GPIO(25)
+#PA3  TIM5_CH4 TIM5 PWM(6) GPIO(26)
+#PA0  PWM_IN_5  INPUT GPIO(23)
+#PA1  PWM_IN_6  INPUT GPIO(24)
 
-[![Coverity Scan Build Status](https://scan.coverity.com/projects/5331/badge.svg)](https://scan.coverity.com/projects/ardupilot-ardupilot)
+ChibiOS: Done!
 
-[![Autotest Status](https://autotest.ardupilot.org/autotest-badge.svg)](https://autotest.ardupilot.org/)
+报错0
+In file included from ../../libraries/AP_Vehicle/AP_Vehicle.h:30:0,
+                 from ../../libraries/AC_AttitudeControl/AC_AttitudeControl.h:9,
+                 from ../../libraries/AC_AttitudeControl/ControlMonitor.cpp:1:
+../../libraries/AP_Logger/AP_Logger.h:57:2: error: #error Need HAL_BOARD_LOG_DIRECTORY for filesystem backend support
+ #error Need HAL_BOARD_LOG_DIRECTORY for filesystem backend support
+需要关闭 HAL_BOARD_LOG_DIRECTORY 使用
 
-Ardupilot is the most advanced, full-featured and reliable open source autopilot software available. It has
-been under development since 2010 by a diverse team of professional engineers, computer scientists and community contributors.
-Our autopilot software is capable of controlling almost any vehicle system imaginable, from conventional
-airplanes, quadplanes, multirotors, and helicopters, to rovers, boats, balancebots and even submarines. It is continually being expanded to provide
-support for new emerging vehicle types.
+在别处clone后编译
+报错1
+    Failed to created ap_romfs_embedded.h 继续理解编译过程
+    tool下面缺少IO_Firmware文件 上传时怎麼会漏掉呢
+报错2
+Command ['/usr/bin/git', 'rev-parse', '--short=8', 'HEAD'] returned 128
 
-## The ArduPilot project is made up of: ##
+悲剧 在上传下载后总是各种不同的报错，继续在线下把
+    仍就在 报错0开始
 
-- ArduCopter: [code](https://github.com/ArduPilot/ardupilot/tree/master/ArduCopter), [wiki](https://ardupilot.org/copter/index.html)
+# Nnow some defines for logging and terrain data files.
+define HAL_BOARD_LOG_DIRECTORY "/APM/LOGS"
+define HAL_BOARD_TERRAIN_DIRECTORY "/APM/TERRAIN"
+是能后OK
 
-- ArduPlane: [code](https://github.com/ArduPilot/ardupilot/tree/master/ArduPlane), [wiki](https://ardupilot.org/plane/index.html)
+报错
+../../libraries/AP_HAL_ChibiOS/system.cpp:39:1: error: static assertion failed: unexpected STM32_HCLK value
+ static_assert(HAL_EXPECTED_SYSCLOCK == STM32_HCLK, "unexpected STM32_HCLK value");
+ ^~~~~~~~~~~~~
+compilation terminated due to -Wfatal-errors.
+// static_assert(HAL_EXPECTED_SYSCLOCK == STM32_HCLK, "unexpected STM32_HCLK value");
 
-- Rover: [code](https://github.com/ArduPilot/ardupilot/tree/master/Rover), [wiki](https://ardupilot.org/rover/index.html)
+#if defined(HAL_EXPECTED_SYSCLOCK)
+#ifdef STM32_SYS_CK
+static_assert(HAL_EXPECTED_SYSCLOCK == STM32_SYS_CK, "unexpected STM32_SYS_CK value");
+#elif defined(STM32_HCLK)
+// static_assert(HAL_EXPECTED_SYSCLOCK == STM32_HCLK, "unexpected STM32_HCLK value");
+#else
+#error "unknown system clock"
+#endif
+#endif
 
-- ArduSub : [code](https://github.com/ArduPilot/ardupilot/tree/master/ArduSub), [wiki](http://ardusub.com/)
+HAL_EXPECTED_SYSCLOCK 这个是有定义的  但是eclipse检测不到定义
+STM32_SYS_CK 有定义的
+STM32_HCLK 没有定义 因此是可以屏蔽的
 
-- Antenna Tracker : [code](https://github.com/ArduPilot/ardupilot/tree/master/AntennaTracker), [wiki](https://ardupilot.org/antennatracker/index.html)
+屏蔽后编译OK
+[764/766] Linking build/sparysuav/bin/arducopter
+[765/766] Generating bin/arducopter.bin
+[766/766] apj_gen build/sparysuav/bin/arducopter.bin
+Waf: Leaving directory `/home/mat/Desktop/20-01-27/build/sparysuav'
 
-## User Support & Discussion Forums ##
+BUILD SUMMARY
+Build directory: /home/mat/Desktop/20-01-27/build/sparysuav
+Target          Text     Data  BSS     Total  
+----------------------------------------------
+bin/arducopter  1365148  2400  194420  1561968
 
-- Support Forum: <https://discuss.ardupilot.org/>
+Build commands will be stored in build/sparysuav/compile_commands.json
+'copter' finished successfully (1m27.512s)
+mat@mat:~/Desktop/20-01-27$ 
 
-- Community Site: <https://ardupilot.org>
+保存为 20-02-10
 
-## Developer Information ##
+02-10
+现在编译完成，需要解决喷洒版的bootload程序问题
 
-- Github repository: <https://github.com/ArduPilot/ardupilot>
+在更新文件到工蜂后再次编译报错
+Command ['/usr/bin/git', 'rev-parse', '--short=8', 'HEAD'] returned 128
 
-- Main developer wiki: <https://ardupilot.org/dev/>
 
-- Developer discussion: <https://discuss.ardupilot.org>
+# 编译提示 PA4 PE10 Unknown pin function  
+	#屏蔽后不报错 这两个引脚是板载的没有引出 当使用IMU小板时才有用 
 
-- Developer chat: <https://discord.com/channels/ardupilot>
+0204
+移动文件后报错
+Missing configuration file '/home/mat/Desktop/20-01-27/build/bebop/ap_config.h', reconfigure the project!
+解决
+./waf distclean 
+./waf configure --board sparysuav
+删除之前的编译文件重新配置编译
 
-## Top Contributors ##
 
-- [Flight code contributors](https://github.com/ArduPilot/ardupilot/graphs/contributors)
-- [Wiki contributors](https://github.com/ArduPilot/ardupilot_wiki/graphs/contributors)
-- [Most active support forum users](https://discuss.ardupilot.org/u?order=post_count&period=quarterly)
-- [Partners who contribute financially](https://ardupilot.org/about/Partners)
+时钟部分报错 提示与其他部分冲突
+In file included from ../../libraries/AP_HAL_ChibiOS/hwdef/common/mcuconf.h:45:0,
+                 from ../../modules/ChibiOS/os/hal/ports/STM32/LLD/TIMv1/hal_st_lld.h:30,
+                 from ../../modules/ChibiOS/os/hal/include/hal_st.h:46,
+                 from ../../modules/ChibiOS/os/common/ports/ARMCMx/chcore_timer.h:32,
+                 from ../../modules/ChibiOS/os/common/ports/ARMCMx/chcore.h:205,
+                 from ../../modules/ChibiOS/os/rt/include/ch.h:110,
+                 from ../../modules/ChibiOS/os/hal/osal/rt/osal.h:32,
+                 from ../../modules/ChibiOS/os/hal/include/hal.h:28,
+                 from ../../modules/ChibiOS/os/hal/ports/STM32/LLD/USARTv1/hal_uart_lld.c:25:
+../../libraries/AP_HAL_ChibiOS/hwdef/common/stm32f47_mcuconf.h:128:0: warning: "STM32_PLLQ_VALUE" redefined
+ #define STM32_PLLQ_VALUE                    8
+ 
+In file included from ../../libraries/AP_HAL_ChibiOS/hwdef/common/chconf.h:31:0,
+                 from ../../modules/ChibiOS/os/rt/include/ch.h:90,
+                 from ../../modules/ChibiOS/os/hal/osal/rt/osal.h:32,
+                 from ../../modules/ChibiOS/os/hal/include/hal.h:28,
+                 from ../../modules/ChibiOS/os/hal/ports/STM32/LLD/USARTv1/hal_uart_lld.c:25:
+./hwdef.h:38:0: note: this is the location of the previous definition
+ #define STM32_PLLQ_VALUE 7
+暂时先屏蔽 
+# STM32_LSEDRV  以下配置获得HCLK=168M
+#define STM32_LSECLK 32768U
+# LSE时钟分频
+# define STM32_LSEDRV (3U << 3U)	
+# define STM32_PLLSRC STM32_PLLSRC_HSE
+# define STM32_PLLM_VALUE 8
+# define STM32_PLLN_VALUE 168
+# define STM32_PLLP_VALUE 2
+# define STM32_PLLQ_VALUE 7
+现在比较疑惑 4.1的结构在 与3.6.8不同
+	老版本modules文件夹下PX4NuttX/nuttx部分包含着MCU的BootLoad代码
+		PX4Firmware
+	4.1的模式变了
 
-## How To Get Involved ##
 
-- The ArduPilot project is open source and we encourage participation and code contributions: [guidelines for contributors to the ardupilot codebase](https://ardupilot.org/dev/docs/contributing.html)
+# ChibiOS system timer 系统定时器选用只能是TIM5/2 32bit and 自动重载
+STM32_ST_USE_TIMER 5
+#PA2  TIM5_CH3 TIM5 PWM(5) GPIO(25)
+#PA3  TIM5_CH4 TIM5 PWM(6) GPIO(26)
+#PA0  PWM_IN_5  INPUT GPIO(23)
+#PA1  PWM_IN_6  INPUT GPIO(24)
 
-- We have an active group of Beta Testers to help us improve our code: [release procedures](https://dev.ardupilot.org/wiki/release-procedures)
+ChibiOS: Done!
 
-- Desired Enhancements and Bugs can be posted to the [issues list](https://github.com/ArduPilot/ardupilot/issues).
+报错0
+In file included from ../../libraries/AP_Vehicle/AP_Vehicle.h:30:0,
+                 from ../../libraries/AC_AttitudeControl/AC_AttitudeControl.h:9,
+                 from ../../libraries/AC_AttitudeControl/ControlMonitor.cpp:1:
+../../libraries/AP_Logger/AP_Logger.h:57:2: error: #error Need HAL_BOARD_LOG_DIRECTORY for filesystem backend support
+ #error Need HAL_BOARD_LOG_DIRECTORY for filesystem backend support
+需要关闭 HAL_BOARD_LOG_DIRECTORY 使用
 
-- Help other users with log analysis in the [support forums](https://discuss.ardupilot.org/)
+在别处clone后编译
+报错1
+    Failed to created ap_romfs_embedded.h 继续理解编译过程
+    tool下面缺少IO_Firmware文件 上传时怎麼会漏掉呢
+报错2
+Command ['/usr/bin/git', 'rev-parse', '--short=8', 'HEAD'] returned 128
 
-- Improve the wiki and chat with other [wiki editors on Gitter](https://gitter.im/ArduPilot/ardupilot_wiki)
+悲剧 在上传下载后总是各种不同的报错，继续在线下把
+    仍就在 报错0开始
 
-- Contact the developers on one of the [communication channels](https://ardupilot.org/copter/docs/common-contact-us.html)
+# Nnow some defines for logging and terrain data files.
+define HAL_BOARD_LOG_DIRECTORY "/APM/LOGS"
+define HAL_BOARD_TERRAIN_DIRECTORY "/APM/TERRAIN"
+是能后OK
 
-## License ##
+报错
+../../libraries/AP_HAL_ChibiOS/system.cpp:39:1: error: static assertion failed: unexpected STM32_HCLK value
+ static_assert(HAL_EXPECTED_SYSCLOCK == STM32_HCLK, "unexpected STM32_HCLK value");
+ ^~~~~~~~~~~~~
+compilation terminated due to -Wfatal-errors.
+// static_assert(HAL_EXPECTED_SYSCLOCK == STM32_HCLK, "unexpected STM32_HCLK value");
 
-The ArduPilot project is licensed under the GNU General Public
-License, version 3.
+#if defined(HAL_EXPECTED_SYSCLOCK)
+#ifdef STM32_SYS_CK
+static_assert(HAL_EXPECTED_SYSCLOCK == STM32_SYS_CK, "unexpected STM32_SYS_CK value");
+#elif defined(STM32_HCLK)
+// static_assert(HAL_EXPECTED_SYSCLOCK == STM32_HCLK, "unexpected STM32_HCLK value");
+#else
+#error "unknown system clock"
+#endif
+#endif
 
-- [Overview of license](https://dev.ardupilot.com/wiki/license-gplv3)
+HAL_EXPECTED_SYSCLOCK 这个是有定义的  但是eclipse检测不到定义
+STM32_SYS_CK 有定义的
+STM32_HCLK 没有定义 因此是可以屏蔽的
 
-- [Full Text](https://github.com/ArduPilot/ardupilot/blob/master/COPYING.txt)
+屏蔽后编译OK
+[764/766] Linking build/sparysuav/bin/arducopter
+[765/766] Generating bin/arducopter.bin
+[766/766] apj_gen build/sparysuav/bin/arducopter.bin
+Waf: Leaving directory `/home/mat/Desktop/20-01-27/build/sparysuav'
 
-## Maintainers ##
+BUILD SUMMARY
+Build directory: /home/mat/Desktop/20-01-27/build/sparysuav
+Target          Text     Data  BSS     Total  
+----------------------------------------------
+bin/arducopter  1365148  2400  194420  1561968
 
-ArduPilot is comprised of several parts, vehicles and boards. The list below
-contains the people that regularly contribute to the project and are responsible
-for reviewing patches on their specific area.
+Build commands will be stored in build/sparysuav/compile_commands.json
+'copter' finished successfully (1m27.512s)
+mat@mat:~/Desktop/20-01-27$ 
 
-- [Andrew Tridgell](https://github.com/tridge):
-  - ***Vehicle***: Plane, AntennaTracker
-  - ***Board***: APM1, APM2, Pixhawk, Pixhawk2, PixRacer
-- [Francisco Ferreira](https://github.com/oxinarf):
-  - ***Bug Master***
-- [Grant Morphett](https://github.com/gmorph):
-  - ***Vehicle***: Rover
-- [Jacob Walser](https://github.com/jaxxzer):
-  - ***Vehicle***: Sub
-- [Lucas De Marchi](https://github.com/lucasdemarchi):
-  - ***Subsystem***: Linux
-- [Michael du Breuil](https://github.com/WickedShell):
-  - ***Subsystem***: Batteries
-  - ***Subsystem***: GPS
-  - ***Subsystem***: Scripting
-- [Peter Barker](https://github.com/peterbarker):
-  - ***Subsystem***: DataFlash, Tools
-- [Randy Mackay](https://github.com/rmackay9):
-  - ***Vehicle***: Copter, Rover, AntennaTracker
-- [Tom Pittenger](https://github.com/magicrub):
-  - ***Vehicle***: Plane
-- [Bill Geyer](https://github.com/bnsgeyer):
-  - ***Vehicle***: TradHeli
-- [Chris Olson](https://github.com/ChristopherOlson):
-  - ***Vehicle***: TradHeli
-- [Emile Castelnuovo](https://github.com/emilecastelnuovo):
-  - ***Board***: VRBrain
-- [Eugene Shamaev](https://github.com/EShamaev):
-  - ***Subsystem***: CAN bus
-  - ***Subsystem***: UAVCAN
-- [Georgii Staroselskii](https://github.com/staroselskii):
-  - ***Board***: NavIO
-- [Gustavo José de Sousa](https://github.com/guludo):
-  - ***Subsystem***: Build system
-- [Julien Beraud](https://github.com/jberaud):
-  - ***Board***: Bebop & Bebop 2
-- [Leonard Hall](https://github.com/lthall):
-  - ***Subsystem***: Copter attitude control and navigation
-- [Matt Lawrence](https://github.com/Pedals2Paddles):
-  - ***Vehicle***: 3DR Solo & Solo based vehicles
-- [Matthias Badaire](https://github.com/badzz):
-  - ***Subsystem***: FRSky
-- [Mirko Denecke](https://github.com/mirkix):
-  - ***Board***: BBBmini, BeagleBone Blue, PocketPilot
-- [Paul Riseborough](https://github.com/priseborough):
-  - ***Subsystem***: AP_NavEKF2
-  - ***Subsystem***: AP_NavEKF3
-- [Pierre Kancir](https://github.com/khancyr):
-  - ***Subsystem***: Copter SITL, Rover SITL
-- [Víctor Mayoral Vilches](https://github.com/vmayoral):
-  - ***Board***: PXF, Erle-Brain 2, PXFmini
-- [Amilcar Lucas](https://github.com/amilcarlucas):
-  - ***Subsystem***: Marvelmind
-- [Samuel Tabor](https://github.com/samuelctabor):
-  - ***Subsystem***: Soaring/Gliding
+保存为 20-02-10
+
+02-10
+现在编译完成，需要解决喷洒版的bootload程序问题
+
+
+在更新文件到工蜂后再次编译报错
+Command ['/usr/bin/git', 'rev-parse', '--short=8', 'HEAD'] returned 128
+
+
+02-16
+由spaymat的hwdat生成的APbootload.bin能够被识别USB 但是在编译下载时 提示 超时，校验不通过。
+
+
