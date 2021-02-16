@@ -1,3 +1,21 @@
+编译
+./waf configure --board sparysuav
+./waf copter
+./waf --targets bin/arducopter --upload
+
+制作ArduPilot引导程序
+./waf configure --board sparysuav --bootloader
+./waf bootloader
+
+test
+查看测试项目
+./waf list | grep 'examples'
+配置板型
+./waf configure --board fmuv5
+编译目的用例下载
+./waf build --target examples/UART_test --upload
+
+
 # 编译提示 PA4 PE10 Unknown pin function  
 	#屏蔽后不报错 这两个引脚是板载的没有引出 当使用IMU小板时才有用 
 
